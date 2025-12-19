@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>NeuroAi- Diagnostic Medical Report</title>
+    <style>
+        body {
+            font-family: "Times New Roman", serif;
+            margin: 40px;
+            color: #222;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        body::before {
+            content: "NeuroAi";
+            position: fixed;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 80px;
+            color: rgba(0, 0, 0, 0.08);
+            white-space: nowrap;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid #004080;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        header img {
+            max-height: 70px;
+            display: block;
+            margin: 0 auto 8px;
+        }
+
+        header h1 {
+            font-size: 22px;
+            color: #004080;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        header h2 {
+            font-size: 14px;
+            font-weight: normal;
+            color: #666;
+            margin: 5px 0 0;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .section h3 {
+            font-size: 16px;
+            color: #004080;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 3px;
+            text-transform: uppercase;
+        }
+
+        .section p,
+        .section li {
+            font-size: 13px;
+            margin: 4px 0;
+        }
+
+        ul {
+            padding-left: 18px;
+        }
+
+        .key-info {
+            font-weight: bold;
+            color: #222;
+        }
+
+        .signature-block {
+            margin-top: 50px;
+            text-align: right;
+        }
+
+        .signature-block img {
+            max-height: 60px;
+            display: block;
+            margin-left: auto;
+            margin-bottom: 5px;
+        }
+
+        .signature-block .doctor-name {
+            font-weight: bold;
+            font-size: 14px;
+            color: #222;
+        }
+
+        .signature-block .doctor-title {
+            font-size: 12px;
+            color: #444;
+        }
+
+        footer {
+            position: relative;
+            margin-top: 40px;
+            left: 0;
+            right: 0;
+            font-size: 11px;
+            border-top: 1px solid #ccc;
+            padding-top: 5px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        footer .qr-block {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        footer img {
+            max-height: 50px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Diagnostic Medical Report</h1>
+        <h2>Generated on {{generatedAt}}</h2>
+    </header>
+
+    <div class="section">
+        <h3>Patient Information</h3>
+        <p><span class="key-info">Name:</span> {{patientName}}</p>
+        <p><span class="key-info">Case ID:</span> {{caseId}}</p>
+    </div>
+
+    <div class="section">
+        <h3>Executive Summary</h3>
+        <p>{{executiveSummary}}</p>
+    </div>
+    <div class="section">
+        <h3>Diagnostic Imaging</h3>
+        {{#if image}}
+        <img src="{{{image}}}" alt="Diagnostic Scan"
+            style="max-width: 100%; border: 1px solid #ccc; border-radius: 8px; margin-top: 10px;" />
+        {{else}}
+        <p>No diagnostic image available.</p>
+        {{/if}}
+    </div>
+
+    <div class="section">
+        <h3>Scan Information</h3>
+        <ul>
+            <li><b>Modality:</b> {{scanInformation.modality}}</li>
+            <li><b>Body Region:</b> {{scanInformation.body_region}}</li>
+            <li><b>Plane/Sequence:</b> {{scanInformation.plane_sequence}}</li>
+            <li><b>Contrast/Enhancement:</b> {{scanInformation.contrast_or_enhancement}}</li>
+            <li><b>Technical Notes:</b> {{scanInformation.technical_notes}}</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h3>Findings</h3>
+        <h4>Abnormalities:</h4>
+        <ul>
+            {{#each findings.abnormalities}}
+            <li>
+                <b>Description:</b> {{description}}<br />
+                <b>Location:</b> {{location}}<br />
+                <b>Extent:</b> {{size_or_extent}}<br />
+                <b>Morphology:</b> {{morphology}}<br />
+                <b>Signal:</b> {{density_or_signal}}<br />
+                <b>Hemodynamics:</b> {{hemodynamics_or_function}}<br />
+                <b>Associated Changes:</b> {{associated_changes}}
+            </li>
+            {{/each}}
+        </ul>
+
+        <h4>Normal Findings:</h4>
+        <ul>
+            {{#each findings.normal}}
+            <li>{{this}}</li>
+            {{/each}}
+        </ul>
+    </div>
+
+    <div class="section">
+        <h3>Clinical Observations</h3>
+        <p><b>Likely Diagnosis:</b> {{clinicalObservations.likelyDiagnosis}}</p>
+        <p><b>Differential Diagnosis:</b></p>
+        <ul>
+            {{#each clinicalObservations.differentialDiagnosis}}
+            <li>{{this}}</li>
+            {{/each}}
+        </ul>
+        <p><b>Clinical Relevance:</b> {{clinicalObservations.clinicalRelevance}}</p>
+    </div>
+
+    <div class="section">
+        <h3>Recommendations</h3>
+        <p><b>Further Imaging:</b></p>
+        <ul>
+            {{#each recommendations.furtherImaging}}
+            <li>{{this}}</li>
+            {{/each}}
+        </ul>
+        <p><b>Laboratory Tests:</b></p>
+        <ul>
+            {{#each recommendations.laboratoryTests}}
+            <li>{{this}}</li>
+            {{/each}}
+        </ul>
+        <p><b>Referrals:</b></p>
+        <ul>
+            {{#each recommendations.referral}}
+            <li>{{this}}</li>
+            {{/each}}
+        </ul>
+        <p><b>Urgency:</b> {{recommendations.urgency}}</p>
+    </div>
+
+    <!-- Doctor Signature Block -->
+    <!-- <div class="signature-block">
+    <img src="{{doctorSignatureUrl}}" alt="Doctor Signature" />
+    <div class="doctor-name">{{doctorName}}</div>
+    <div class="doctor-title">{{doctorTitle}}</div>
+  </div> -->
+
+    <!-- Footer with Report ID  -->
+    <footer>
+        <div>
+            Report ID: <b>{{caseId}}</b><br />
+            This report is Computer-generated and confidential. It is intended for the patient and should not be shared
+            with anyone.
+        </div>
+    </footer>
+</body>
+
+</html>
