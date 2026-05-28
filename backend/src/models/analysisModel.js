@@ -20,6 +20,10 @@ const analysisSchema = new mongoose.Schema(
       ref: "User",
       required: [true, "Analysis must belong to a user"],
     },
+    isArchived: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     toJSON: { virtuals: true },

@@ -141,12 +141,33 @@ exports.uploadAndProcess = catchAsync(async (req, res, next) => {
   );
 
   // console.log("Gemini Report:", report);
-  const cleanJson = report
-    .replace(/```json/g, "")
-    .replace(/```/g, "")
-    .trim();
+  let cleanJson = report;
+  const jsonMatch = report.match(/```json\s*([\s\S]*?)\s*```/) || report.match(/```\s*([\s\S]*?)\s*```/);
+  if (jsonMatch) {
+    cleanJson = jsonMatch[1];
+  }
+  cleanJson = cleanJson.trim();
 
-  const parsedResponse = JSON.parse(cleanJson);
+  let parsedResponse = {};
+  try {
+    parsedResponse = JSON.parse(cleanJson);
+  } catch (parseErr) {
+    console.error("Failed to parse Gemini JSON, falling back to manual parsing:", parseErr);
+    // Try to extract any JSON-like structure or throw a clean error
+    throw new AppError("Failed to parse analysis results from AI response", 500);
+  }
+
+  // Safely extract report data
+  let reportData = {};
+  if (parsedResponse.PROMPT && parsedResponse.PROMPT.report) {
+    reportData = parsedResponse.PROMPT.report;
+  } else if (parsedResponse.report) {
+    reportData = parsedResponse.report;
+  } else if (parsedResponse.scan_information) {
+    reportData = parsedResponse;
+  } else {
+    reportData = parsedResponse;
+  }
 
   // Upload to Cloudinary
   const { imageUrl, originalImageUrl } =
@@ -157,13 +178,14 @@ exports.uploadAndProcess = catchAsync(async (req, res, next) => {
       },
       req.file.originalname
     );
+
   // Save to MongoDB
   const analysis = await Analysis.create({
     user: req.user.id,
     mimeType: filetype.mime,
     format,
-    data: metadata.metadata || {},
-    analysisResults: parsedResponse.PROMPT.report || {},
+    data: metadata || {},
+    analysisResults: reportData || {},
     cloudinaryImageUrl: imageUrl,
     originalImageUrl: originalImageUrl,
     status: "completed",
@@ -190,14 +212,65 @@ exports.getAnalysis = catchAsync(async (req, res, next) => {
 
 // ---- Get All Analyses for a User ----
 exports.getAllAnalyses = catchAsync(async (req, res, next) => {
-  const userId = "68a0185ccad054057a5200bc";
+  const userId = req.user.id;
 
-  const allAnalyses = await Analysis.find({ user: userId }).sort({
+  const filter = { user: userId };
+  if (req.query.archived === "true") {
+    filter.isArchived = true;
+  } else {
+    filter.isArchived = { $ne: true };
+  }
+
+  const allAnalyses = await Analysis.find(filter).sort({
     uploadedAt: -1,
   });
   res.status(200).json({
     status: "success",
     results: allAnalyses.length,
     analyses: allAnalyses,
+  });
+});
+
+// ---- Delete Analysis ----
+exports.deleteAnalysis = catchAsync(async (req, res, next) => {
+  const doc = await Analysis.findByIdAndDelete(req.params.id);
+  if (!doc) {
+    return next(new AppError("No document found with that ID", 404));
+  }
+  res.status(204).json({
+    status: "success",
+    data: null,
+  });
+});
+
+// ---- Archive Analysis ----
+exports.archiveAnalysis = catchAsync(async (req, res, next) => {
+  const analysis = await Analysis.findByIdAndUpdate(
+    req.params.id,
+    { isArchived: true },
+    { new: true, runValidators: true }
+  );
+  if (!analysis) {
+    return next(new AppError("No document found with that ID", 404));
+  }
+  res.status(200).json({
+    status: "success",
+    analysis,
+  });
+});
+
+// ---- Unarchive Analysis ----
+exports.unarchiveAnalysis = catchAsync(async (req, res, next) => {
+  const analysis = await Analysis.findByIdAndUpdate(
+    req.params.id,
+    { isArchived: false },
+    { new: true, runValidators: true }
+  );
+  if (!analysis) {
+    return next(new AppError("No document found with that ID", 404));
+  }
+  res.status(200).json({
+    status: "success",
+    analysis,
   });
 });

@@ -25,9 +25,18 @@ router.post(
 );
 
 // Get all analyses for a user
-router.get("/", analysisController.getAllAnalyses);
+router.get("/", authController.protect, analysisController.getAllAnalyses);
 
 // Get results
-router.get("/:id", analysisController.getAnalysis);
+router.get("/:id", authController.protect, analysisController.getAnalysis);
+
+// Delete analysis case
+router.delete("/:id", authController.protect, analysisController.deleteAnalysis);
+
+// Archive analysis case
+router.patch("/:id/archive", authController.protect, analysisController.archiveAnalysis);
+
+// Unarchive analysis case
+router.patch("/:id/unarchive", authController.protect, analysisController.unarchiveAnalysis);
 
 module.exports = router;

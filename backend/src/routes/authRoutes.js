@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.post("/login", authController.login);
 router.post("/signup", authController.signup);
-// router.post("/logout");
+router.get("/logout", authController.logout);
 
 // check if user is logged in or not
 router.get("/me", authController.protect, (req, res) => {
@@ -14,8 +14,8 @@ router.get("/me", authController.protect, (req, res) => {
       user: req.user,
     });
   });
-// router.post("/forgotPassword");
-// router.patch("/resetPassword/:token");
-// router.patch("/updatePassword");
+router.post("/forgotPassword", authController.forgotPassword);
+router.patch("/resetPassword/:token", authController.resetPassword);
+router.patch("/updatePassword", authController.protect, authController.updatePassword);
 
 module.exports = router;
