@@ -98,10 +98,19 @@ exports.generateReport = catchAsync(async (req, res, next) => {
   const finalHtml = template(caseData);
 
   // 4. Puppeteer PDF generation
-  const browser = await puppeteer.launch({
-    headless: "new",
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  console.log("Puppeteer executable:", puppeteer.executablePath());
+  
+const browser = await puppeteer.launch({
+  headless: true,
+  executablePath: puppeteer.executablePath(),
+  args: [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+  ],
+});
+  
   const page = await browser.newPage();
   await page.setContent(finalHtml, { waitUntil: "domcontentloaded" });
 
