@@ -16,21 +16,22 @@ const PROMPT = require("../config/constant");
 
 // ----- Processing Functions -----
 async function processDicom(buffer) {
-  // Stage 1 is implicitly handled by dcmjs-imaging
-  const data = await parseDicomFile(buffer);
+  // Stage 1: Parse — destructure only the safe scalar metadata.
+  // parseDicomFile also returns rawPixelData (Uint8Array) and dataSet
+  // (full binary DICOM object). Those must NOT be stored in MongoDB —
+  // BSON will throw "offset is out of bounds" trying to serialize them.
+  const { metadata } = await parseDicomFile(buffer);
+
   // Stage 2: Render DICOM to RGBA
   const { rgbaBuffer, width, height } = await renderDicomToRgba(buffer);
 
   // Stage 3: Encode RGBA to PNG
   const pngBuffer = await encodeRgbaToPng(rgbaBuffer, width, height);
 
-  // console.log(pngBuffer);
-
-  // The final pngBuffer is now ready to be sent to the Gemini API or stored in a cloud service.
   return {
     processedImageBuffer: pngBuffer,
     format: "png",
-    metadata: data || {},
+    metadata: metadata || {},
   };
 }
 
@@ -54,7 +55,7 @@ async function processJpg(buffer) {
         exifData.Camera = `${tags.Make.description} ${tags.Model.description}`;
       }
 
-      console.log("Extracted EXIF data:", exifTextContext);
+      console.log("Extracted EXIF data:", exifData);
     } catch (exifError) {
       console.log("No EXIF data found or error parsing it.");
     }
@@ -169,13 +170,10 @@ exports.uploadAndProcess = catchAsync(async (req, res, next) => {
     reportData = parsedResponse;
   }
 
-  // Upload to Cloudinary
+  // Upload PNG to Cloudinary (raw DICOM buffer is never sent — only the rendered PNG)
   const { imageUrl, originalImageUrl } =
     await cloudinaryUploader.storeProcessedAssets(
-      {
-        processedData: { processedImageBuffer, format },
-        originalData: { buffer, format: filetype.mime },
-      },
+      { processedData: { processedImageBuffer, format } },
       req.file.originalname
     );
 
