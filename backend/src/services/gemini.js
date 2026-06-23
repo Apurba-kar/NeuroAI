@@ -9,7 +9,7 @@ if (!apiKey) {
 const genAI = new GoogleGenerativeAI(apiKey);
 
 // Helper to fetch a model
-function getModel(modelName = "gemini-2.5-flash") {
+function getModel(modelName = "gemini-2.0-flash") {
   return genAI.getGenerativeModel({ model: modelName });
 }
 
