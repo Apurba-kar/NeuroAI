@@ -26,7 +26,7 @@ app.use(cookieParser());
 // CORS for frontend dev server
 app.use(
   cors({
-    origin: "http://localhost:5173" || "https://neuroai.vercel.app",
+    origin: "http://localhost:5173" || "https://neuro-ai-blush.vercel.app",
     credentials: true,
   })
 );
