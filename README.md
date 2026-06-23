@@ -29,12 +29,9 @@
 - [Getting Started](#-getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
-  - [Environment Variables](#environment-variables)
   - [Running the App](#running-the-app)
 - [API Reference](#-api-reference)
 - [Project Structure](#-project-structure)
-- [Security](#-security)
-- [Contributing](#-contributing)
 
 ---
 
