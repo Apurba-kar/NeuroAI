@@ -11,20 +11,16 @@ const SignToken = (id) =>
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 
-const cookieOptions = {
-  expires: new Date(
-    Date.now() +
-      process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-  ),
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite:
-    process.env.NODE_ENV === "production"
-      ? "none"
-      : "lax",
-};
+const createSendToken = (user, statusCode, req, res) => {
+  const token = SignToken(user._id);
 
-res.cookie("jwt", token, cookieOptions);
+  res.cookie("jwt", token, {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true,
+    secure: req.secure || req.headers["x-forwarded-proto"] === "https",
+  });
 
   //Remove the password from the output
   user.password = undefined;
@@ -37,7 +33,6 @@ res.cookie("jwt", token, cookieOptions);
     },
   });
 };
-
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     firstName: req.body.firstName,
