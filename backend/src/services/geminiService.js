@@ -10,7 +10,7 @@ const mimeTypeMap = {
 };
 
 exports.generateContentFromImage = async (prompt, imageBuffer, imageFormat) => {
-  const model = getModel("gemini-2.5-flash");
+  const model = getModel("gemini-2.0-flash");
 
   const mimeType = mimeTypeMap[imageFormat.toLowerCase()];
   if (!mimeType) {
