@@ -1,5 +1,4 @@
 const { v2: cloudinary } = require("cloudinary");
-const { format } = require("sharp");
 const { Readable } = require("stream");
 const AppError = require("../utils/appError");
 
@@ -30,45 +29,28 @@ const uploadToCloudinary = (buffer, options) => {
 };
 
 exports.storeProcessedAssets = async (
-  { processedData, originalData },
+  { processedData },
   originalFileName
 ) => {
-  console.log(originalData);
-  try {
-    const timestamp = Date.now();
-    const baseId = `${originalFileName}_${timestamp}`;
-    //Upload processed photo
-    const imageResult = await uploadToCloudinary(
-      processedData.processedImageBuffer,
-      {
-        folder: "processed/images",
-        public_id: baseId,
-        resource_type: "image",
-        format: processedData.format || "png",
-      }
-    );
+  const timestamp = Date.now();
+  const baseId = `${originalFileName}_${timestamp}`;
 
-    // --- Upload original file ---
-    const isDicom =
-      originalData.format === "dicom" ||
-      originalFileName.toLowerCase().endsWith(".dcm");
+  // Only upload the rendered PNG — raw DICOM is never needed downstream
+  // (Gemini and PDF generation both use the PNG) and exceeds Cloudinary's
+  // 10 MB free-tier limit for files > 10 MB.
+  const imageResult = await uploadToCloudinary(
+    processedData.processedImageBuffer,
+    {
+      folder: "processed/images",
+      public_id: baseId,
+      resource_type: "image",
+      format: processedData.format || "png",
+    }
+  );
 
-    const originalResult = await uploadToCloudinary(
-      originalData.buffer || originalData.processedImageBuffer,
-      {
-        folder: isDicom ? "original/dicom" : "original/files",
-        public_id: baseId,
-        resource_type: isDicom ? "raw" : "image",
-        format: isDicom ? "dcm" : originalData.format || "png",
-      }
-    );
-
-    return {
-      imageUrl: imageResult.secure_url,
-      originalImageUrl: originalResult.secure_url,
-    };
-  } catch (error) {
-    console.error("Cloudinary upload failed:", error);
-    throw new AppError("Failed to upload processed assets.", 500);
-  }
+  return {
+    imageUrl: imageResult.secure_url,
+    // No raw DICOM stored — set to null for schema compatibility
+    originalImageUrl: null,
+  };
 };
