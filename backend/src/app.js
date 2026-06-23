@@ -13,6 +13,8 @@ const analysisRouter = require("./routes/analysisRoutes");
 // Start express app
 const app = express();
 
+app.set("trust proxy", 1);
+
 // Development logging
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
